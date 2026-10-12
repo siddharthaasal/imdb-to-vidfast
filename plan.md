@@ -39,13 +39,13 @@ The path (`movie` or `tv`) picks the player. For episodes, the ID must be the **
 
 ## Phase 2: Series and episodes
 
-- [ ] **Handle series pages.** Series and mini-series open as TV, S1 E1.
+- [x] **Handle series pages.** Series and mini-series open as TV, S1 E1.
   *Done when:* a series page opens the TV player, not the movie one.
-- [ ] **Find the parent series on episode pages.** Get the series ID from the page's series link or embedded data, never the episode's own ID.
+- [x] **Find the parent series on episode pages.** Get the series ID from the page's series link or embedded data, never the episode's own ID.
   *Done when:* an episode page opens the show, not a blank player.
-- [ ] **Read the season and episode numbers.** Use two methods: IMDb's embedded page data, and the visible `S2.E5` label as a fallback.
+- [x] **Read the season and episode numbers.** Use two methods: IMDb's embedded page data, and the visible `S2.E5` label as a fallback.
   *Done when:* a mid-season episode opens exactly that episode.
-- [ ] **Fail gracefully when numbers are missing.** If season or episode can't be read, open the series at S1 E1 and show a `?` badge on the icon.
+- [x] **Fail gracefully when numbers are missing.** If season or episode can't be read, open the series at S1 E1 and show a `?` badge on the icon.
   *Done when:* an episode with season "Unknown" still opens something sensible.
 
 ## Phase 3: Remember the last five
