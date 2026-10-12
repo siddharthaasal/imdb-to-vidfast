@@ -96,9 +96,9 @@
     }
 
     h1 {
-      max-width: 15ch;
-      font-size: clamp(44px, 7vw, 88px);
-      line-height: 1.02;
+      max-width: 18ch;
+      font-size: clamp(36px, 4.6vw, 60px);
+      line-height: 1.06;
     }
 
     .sub {
@@ -965,7 +965,9 @@
     <div class="wrap">
       <span>Built by Siddharth Aasal, 2026</span>
       <a href="https://github.com/siddharthaasal/imdb-to-vidfast">GitHub</a>
-      <a href="https://github.com/siddharthaasal/imdb-to-vidfast/releases/latest">Releases</a>
+      <a href="changelog.html">Changelog</a>
+      <a href="privacy.html">Privacy</a>
+      <a href="terms.html">Terms</a>
       <span class="end">Not affiliated with IMDb or VidFast.</span>
     </div>
   </footer>
@@ -977,9 +979,9 @@
       const scenes = [...section.querySelectorAll('.scene')];
       let current = 0;
 
-      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-        section.classList.add('is-static');
-      }
+      // Reduced motion: no auto-advance, visitors switch features themselves.
+      const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (still) section.classList.add('is-static');
 
       function restart(el) {
         el.classList.remove('is-active');
@@ -987,7 +989,7 @@
         el.classList.add('is-active');
       }
 
-      function show(index, { focus = false, manual = false } = {}) {
+      function show(index, { focus = false } = {}) {
         current = (index + tabs.length) % tabs.length;
         tabs.forEach((tab, i) => {
           const on = i === current;
@@ -998,34 +1000,34 @@
         scenes.forEach((scene, i) => {
           if (i === current) restart(scene); else scene.classList.remove('is-active');
         });
-        // A click or key press means the visitor is driving; stop auto-advancing.
-        if (manual) section.classList.add('is-static');
         if (focus) tabs[current].focus();
       }
 
+      // The underline's fill animation drives the cycle: when it ends, move on.
+      // Clicking a feature jumps to it and the cycle carries on from there.
       tabs.forEach((tab, i) => {
-        tab.addEventListener('click', () => show(i, { manual: true }));
+        tab.addEventListener('click', () => show(i));
         tab.querySelector('.tab-track i').addEventListener('animationend', () => {
-          if (!section.classList.contains('is-static')) show(current + 1);
+          if (tabs[current] === tab) show(current + 1);
         });
         tab.addEventListener('keydown', (e) => {
           const step = { ArrowDown: 1, ArrowRight: 1, ArrowUp: -1, ArrowLeft: -1 }[e.key];
           if (step) {
             e.preventDefault();
-            show(current + step, { focus: true, manual: true });
+            show(current + step, { focus: true });
           }
         });
       });
 
-      // Pause while the pointer is over the section, and while it's off screen.
-      let hovering = false;
-      let visible = false;
-      const sync = () => section.classList.toggle('is-paused', hovering || !visible);
-      section.addEventListener('mouseenter', () => { hovering = true; sync(); });
-      section.addEventListener('mouseleave', () => { hovering = false; sync(); });
-      new IntersectionObserver(([entry]) => { visible = entry.isIntersecting; sync(); }, { threshold: 0.3 })
-        .observe(section);
-      sync();
+      // Only pause while the section is off screen or the tab is hidden,
+      // so nobody misses the start of the cycle.
+      let onScreen = true;
+      const sync = () => section.classList.toggle('is-paused', !onScreen || document.hidden);
+      if ('IntersectionObserver' in window) {
+        new IntersectionObserver(([entry]) => { onScreen = entry.isIntersecting; sync(); }, { threshold: 0.15 })
+          .observe(section);
+      }
+      document.addEventListener('visibilitychange', sync);
     })();
   </script>
 </body>
