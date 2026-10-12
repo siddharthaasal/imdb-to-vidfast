@@ -93,10 +93,9 @@
       padding-bottom: clamp(64px, 8vw, 112px);
     }
 
-    /* The hero drawing: a Hairline figure (docs/carousel.js on docs/vendor/hairline-kernel.js) */
+    /* The hero drawing: a Hairline figure (docs/figures/dock.js on docs/vendor/hairline-kernel.js) */
     .figure {
       position: relative;
-      overflow-x: clip; /* the stage is wider than the column; its sides are empty */
       --hairline-plate: var(--bg);
       --hairline-hi: var(--brand-light);
       --hairline-edge: #7c7c77;
@@ -745,7 +744,7 @@
 
     @media (max-width: 900px) {
       .hero { grid-template-columns: 1fr; }
-      .figure { max-width: 520px; width: 100%; justify-self: center; }
+      .figure { max-width: 520px; width: 100%; justify-self: center; overflow-x: clip; /* the stage is wider than the column */ }
       .features { grid-template-columns: 1fr; }
       .tabs { padding-left: 0; }
       .stage { min-height: 480px; }
@@ -1015,32 +1014,38 @@
     </div>
   </footer>
 
-  <!-- Hero drawing: the Hairline engine (MIT, Lucas Marques; see vendor/hairline-LICENSE.txt) and our carousel figure. -->
+  <!-- Hero drawing: the Hairline engine (MIT, Lucas Marques; see vendor/hairline-LICENSE.txt) and our dock figure. -->
   <script src="vendor/hairline-kernel.js"></script>
   <script>
     /*
-     * Mounts one Hairline figure into the hero, the way the package's own host does,
-     * and starts its tour: an unseen pointer that walks the figure on its own,
-     * gives way to a real one, and picks up again after it leaves.
+     * Hero drawing host. figures/dock.js registers itself with hairline(); it is
+     * mounted into the stage once the page has loaded. Its tour walks it on its
+     * own, gives way to a real pointer, and picks up again after it leaves.
      */
-    window.hairline = (figure) => {
-      const stage = document.getElementById('figure-stage');
-      const readEl = document.getElementById('figure-read');
-      HL.inject(document);
-      stage.setAttribute('data-hairline', figure.name);
-      stage.setAttribute('role', 'img');
-      stage.setAttribute('aria-label', figure.means);
-      const svg = HL.mk('svg', { viewBox: '0 0 400 320', 'aria-hidden': 'true' }, stage);
-      const read = {
-        _t: null,
-        get textContent() { return this._t; },
-        set textContent(v) { this._t = v == null ? '' : String(v); readEl.textContent = this._t === 'rest' ? '' : this._t; },
-      };
-      figure.mount({ stage, svg, read }, figure.range[1]);
-      HL.tour(stage, figure.tour || HL.LAP);
-    };
+    (() => {
+      let figure = null;
+      window.hairline = (f) => { figure = f; };
+
+      document.addEventListener('DOMContentLoaded', () => {
+        if (!figure) return;
+        const stage = document.getElementById('figure-stage');
+        const readEl = document.getElementById('figure-read');
+        HL.inject(document);
+        stage.setAttribute('data-hairline', figure.name);
+        stage.setAttribute('role', 'img');
+        stage.setAttribute('aria-label', figure.means);
+        const svg = HL.mk('svg', { viewBox: '0 0 400 320', 'aria-hidden': 'true' }, stage);
+        let text = null;
+        const read = {
+          get textContent() { return text; },
+          set textContent(v) { text = v == null ? '' : String(v); readEl.textContent = text === 'rest' ? '' : text; },
+        };
+        figure.mount({ stage, svg, read }, figure.range[1]);
+        HL.tour(stage, figure.tour || HL.LAP);
+      });
+    })();
   </script>
-  <script type="module" src="carousel.js"></script>
+  <script type="module" src="figures/dock.js"></script>
 
   <script>
     (() => {
