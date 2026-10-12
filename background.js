@@ -1,4 +1,4 @@
-import { movieUrl } from './config.js';
+import { movieUrl, tvUrl } from './config.js';
 import { detectTitle } from './detect.js';
 
 const IMDB_TITLE_URL = /^https:\/\/([a-z]+\.)?imdb\.com\/([a-z-]+\/)?title\/tt\d{7,}/i;
@@ -6,6 +6,27 @@ const IMDB_TITLE_URL = /^https:\/\/([a-z]+\.)?imdb\.com\/([a-z-]+\/)?title\/tt\d
 async function flashBadge(tabId, text) {
   await chrome.action.setBadgeText({ tabId, text });
   setTimeout(() => chrome.action.setBadgeText({ tabId, text: '' }), 2000);
+}
+
+const isPositive = (n) => Number.isInteger(n) && n >= 1;
+
+// Decide where to go. Returns { url, unsure } or null if nothing sensible can open.
+function buildTarget(info) {
+  if (info?.type === 'movie') return { url: movieUrl(info.id), unsure: false };
+
+  if (info?.type === 'series') return { url: tvUrl(info.id, 1, 1), unsure: false };
+
+  if (info?.type === 'episode') {
+    // Without the parent series ID VidFast can't play anything.
+    if (!info.seriesId) return null;
+    if (isPositive(info.season) && isPositive(info.episode)) {
+      return { url: tvUrl(info.seriesId, info.season, info.episode), unsure: false };
+    }
+    // Season or episode unreadable ("Unknown", specials...): start the show at S1 E1.
+    return { url: tvUrl(info.seriesId, 1, 1), unsure: true };
+  }
+
+  return null;
 }
 
 chrome.action.onClicked.addListener(async (tab) => {
@@ -24,17 +45,22 @@ chrome.action.onClicked.addListener(async (tab) => {
     return;
   }
 
-  if (result?.type === 'movie') {
-    await chrome.tabs.create({
-      url: movieUrl(result.id),
-      index: tab.index + 1,
-      openerTabId: tab.id,
-      active: true,
-    });
+  const target = buildTarget(result);
+  if (!target) {
+    console.info('VidFast launcher: nothing to open for', result);
+    await flashBadge(tab.id, '?');
     return;
   }
 
-  // Series and episodes arrive in Phase 2.
-  console.info('VidFast launcher: not a movie yet', result);
-  await flashBadge(tab.id, '?');
+  const newTab = await chrome.tabs.create({
+    url: target.url,
+    index: tab.index + 1,
+    openerTabId: tab.id,
+    active: true,
+  });
+
+  // The new tab has focus, so put the "?" there where it will be seen.
+  if (target.unsure) {
+    await chrome.action.setBadgeText({ tabId: newTab.id, text: '?' });
+  }
 });
