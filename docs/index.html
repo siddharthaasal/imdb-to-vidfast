@@ -5,77 +5,47 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>VidFast launcher</title>
   <meta name="description" content="A small Chrome extension that opens the IMDb title you're on in VidFast with one click, and remembers your last five.">
+  <meta name="theme-color" content="#050505">
   <meta property="og:title" content="VidFast launcher">
-  <meta property="og:description" content="From an IMDb page to the player in one click. A small Manifest V3 Chrome extension in plain JavaScript.">
+  <meta property="og:description" content="Any IMDb title, one click from playing. A small Chrome extension in plain JavaScript.">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'%3E%3Crect width='128' height='128' rx='30' fill='%237A1E3A'/%3E%3Cg fill='%23fff'%3E%3Cpolygon points='104,24 96.93,70.67 57.33,31.07'/%3E%3Cpolygon points='83.49,55.82 68.64,70.67 57.33,59.36 72.18,44.51'/%3E%3Cpolygon points='60.16,79.15 50.26,89.05 38.95,77.74 48.85,67.84'/%3E%3Cpolygon points='41.77,97.54 36.12,103.2 24.8,91.88 30.46,86.23'/%3E%3C/g%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #f6f4f0;
-      --surface: #ffffff;
-      --ink: #171615;
-      --muted: #6b6761;
-      --faint: #a39e96;
-      --line: #e3dfd8;
+      color-scheme: dark;
+      --bg: #050505;
+      --panel: #0e0e0e;
+      --raised: #161616;
+      --raised-2: #1d1d1d;
+      --line: #222222;
+      --line-soft: #1a1a1a;
+      --text: #f2f2f0;
+      --muted: #8c8c88;
+      --dim: #5b5b58;
       --brand: #7a1e3a;
-      --brand-text: #7a1e3a;
-      --brand-soft: #f3e7eb;
-      --code-bg: #efece6;
-      --shadow: 0 1px 2px rgba(23, 22, 21, 0.04), 0 12px 32px -12px rgba(23, 22, 21, 0.16);
-
-      --serif: 'Instrument Serif', 'Iowan Old Style', Georgia, serif;
-      --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-      --mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
-      --max: 1080px;
-      --gutter: clamp(16px, 5vw, 40px);
-    }
-
-    @media (prefers-color-scheme: dark) {
-      :root:not([data-theme="light"]) {
-        --bg: #11100f;
-        --surface: #1a1918;
-        --ink: #f1eee9;
-        --muted: #a29d95;
-        --faint: #6f6a63;
-        --line: #2b2926;
-        --brand-text: #e48aa4;
-        --brand-soft: #2c1a20;
-        --code-bg: #1f1d1b;
-        --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 16px 40px -16px rgba(0, 0, 0, 0.6);
-      }
-    }
-
-    :root[data-theme="dark"] {
-      --bg: #11100f;
-      --surface: #1a1918;
-      --ink: #f1eee9;
-      --muted: #a29d95;
-      --faint: #6f6a63;
-      --line: #2b2926;
-      --brand-text: #e48aa4;
-      --brand-soft: #2c1a20;
-      --code-bg: #1f1d1b;
-      --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 16px 40px -16px rgba(0, 0, 0, 0.6);
+      --brand-light: #e48aa4;
+      --font: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      --max: 1240px;
+      --gutter: clamp(16px, 4.5vw, 56px);
+      --cycle: 6s;
     }
 
     *, *::before, *::after { box-sizing: border-box; }
 
-    html { -webkit-text-size-adjust: 100%; }
+    html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
 
     body {
       margin: 0;
       background: var(--bg);
-      color: var(--ink);
-      font: 16px/1.6 var(--sans);
+      color: var(--text);
+      font: 400 16px/1.55 var(--font);
       -webkit-font-smoothing: antialiased;
-      text-rendering: optimizeLegibility;
     }
 
-    a { color: inherit; }
-
-    code, .mono { font-family: var(--mono); font-size: 0.875em; }
+    a { color: inherit; text-decoration: none; }
+    b { font-weight: 500; }
 
     .wrap {
       max-width: var(--max);
@@ -83,349 +53,440 @@
       padding: 0 var(--gutter);
     }
 
+    .mark { display: block; flex: none; }
+
     /* ---------- Top bar ---------- */
 
     .bar {
       display: flex;
       align-items: center;
       gap: 12px;
-      padding-top: 24px;
-      padding-bottom: 24px;
+      padding-top: 28px;
+      padding-bottom: 28px;
     }
 
     .brand {
       display: flex;
       align-items: center;
       gap: 10px;
-      font-weight: 600;
-      letter-spacing: -0.01em;
-      text-decoration: none;
+      font-weight: 500;
     }
-
-    .brand svg { width: 24px; height: 24px; }
 
     .bar nav {
       margin-left: auto;
       display: flex;
-      gap: 24px;
+      gap: 28px;
       font-size: 14px;
-    }
-
-    .bar nav a {
       color: var(--muted);
-      text-decoration: none;
     }
 
-    .bar nav a:hover { color: var(--ink); }
+    .bar nav a:hover { color: var(--text); }
 
     /* ---------- Hero ---------- */
 
     .hero {
-      padding-top: clamp(48px, 9vw, 112px);
-      padding-bottom: clamp(48px, 8vw, 96px);
+      padding-top: clamp(56px, 10vw, 136px);
+      padding-bottom: clamp(64px, 9vw, 120px);
     }
-
-    .eyebrow {
-      margin: 0 0 20px;
-      color: var(--muted);
-      font-size: 13px;
-      letter-spacing: 0.02em;
-    }
-
-    .eyebrow span { color: var(--faint); margin: 0 8px; }
 
     h1, h2 {
       margin: 0;
-      font-family: var(--serif);
       font-weight: 400;
-      letter-spacing: -0.015em;
+      letter-spacing: -0.035em;
     }
 
     h1 {
       max-width: 15ch;
-      font-size: clamp(44px, 8.4vw, 92px);
-      line-height: 0.98;
+      font-size: clamp(44px, 7vw, 88px);
+      line-height: 1.02;
     }
 
-    h1 em, h2 em {
-      font-style: italic;
-      color: var(--brand-text);
-    }
-
-    .lede {
-      max-width: 34em;
-      margin: 28px 0 0;
+    .sub {
+      max-width: 30em;
+      margin: 24px 0 0;
       color: var(--muted);
-      font-size: clamp(17px, 2vw, 19px);
-      line-height: 1.55;
+      font-size: clamp(17px, 1.6vw, 20px);
+      line-height: 1.5;
+      letter-spacing: -0.01em;
     }
 
     .actions {
       display: flex;
       flex-wrap: wrap;
       align-items: center;
-      gap: 12px 20px;
-      margin-top: 36px;
+      gap: 12px;
+      margin-top: 40px;
     }
 
-    .button {
+    .btn {
       display: inline-flex;
       align-items: center;
       gap: 10px;
-      padding: 13px 20px;
+      height: 46px;
+      padding: 0 22px;
       border-radius: 999px;
-      background: var(--brand);
-      color: #fff;
-      font-size: 15px;
-      font-weight: 600;
-      text-decoration: none;
-      transition: transform 160ms ease, box-shadow 160ms ease;
-    }
-
-    .button:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 8px 20px -8px rgba(122, 30, 58, 0.6);
-    }
-
-    .button small {
-      font-weight: 400;
-      opacity: 0.75;
-    }
-
-    .link {
-      color: var(--ink);
       font-size: 15px;
       font-weight: 500;
-      text-decoration: underline;
-      text-decoration-color: var(--line);
-      text-underline-offset: 4px;
-      text-decoration-thickness: 1.5px;
+      transition: background-color 160ms ease, border-color 160ms ease;
     }
 
-    .link:hover { text-decoration-color: currentColor; }
+    .btn-primary { background: var(--text); color: #0a0a0a; }
+    .btn-primary:hover { background: #ffffff; }
+    .btn-primary span { color: #77776f; font-weight: 400; }
 
-    /* ---------- The mapping ---------- */
+    .btn-ghost { border: 1px solid var(--line); color: var(--text); }
+    .btn-ghost:hover { border-color: #3a3a3a; }
 
-    .mapping {
-      margin-top: clamp(56px, 8vw, 88px);
-      border: 1px solid var(--line);
-      border-radius: 16px;
-      background: var(--surface);
-      box-shadow: var(--shadow);
+    /* ---------- Features ---------- */
+
+    .features {
+      display: grid;
+      grid-template-columns: minmax(0, 4fr) minmax(0, 7fr);
+      gap: clamp(32px, 5vw, 80px);
+      align-items: stretch;
+      padding-bottom: clamp(96px, 12vw, 160px);
+    }
+
+    .tabs {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 6px;
+      padding-left: clamp(0px, 2vw, 28px);
+    }
+
+    .tab {
+      display: block;
+      width: 100%;
+      padding: 14px 0;
+      border: 0;
+      background: none;
+      color: var(--dim);
+      font: inherit;
+      text-align: left;
+      cursor: pointer;
+      transition: color 200ms ease;
+    }
+
+    .tab:hover { color: var(--muted); }
+
+    .tab-title {
+      display: inline-block;
+      font-size: clamp(22px, 2.3vw, 30px);
+      line-height: 1.2;
+      letter-spacing: -0.025em;
+    }
+
+    .tab-body {
+      display: grid;
+      grid-template-rows: 0fr;
+      transition: grid-template-rows 320ms ease;
+    }
+
+    .tab-body > span { overflow: hidden; }
+
+    .tab-body p {
+      max-width: 26em;
+      margin: 0;
+      padding-top: 12px;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.55;
+    }
+
+    .tab-track {
+      position: relative;
+      display: block;
+      height: 2px;
+      margin-top: 12px;
+      max-width: 340px;
+      background: var(--line);
+      opacity: 0;
+      transition: opacity 200ms ease;
+    }
+
+    .tab-track i {
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 0;
+      background: var(--text);
+    }
+
+    .tab.is-active { color: var(--text); cursor: default; }
+    .tab.is-active .tab-body { grid-template-rows: 1fr; }
+    .tab.is-active .tab-track { opacity: 1; }
+    .tab.is-active .tab-track i { animation: fill var(--cycle) linear forwards; }
+    .features.is-paused .tab.is-active .tab-track i { animation-play-state: paused; }
+    .features.is-static .tab.is-active .tab-track i { animation: none; width: 100%; }
+
+    @keyframes fill { to { width: 100%; } }
+
+    .stage {
+      position: relative;
+      min-height: 560px;
+      border: 1px solid var(--line-soft);
+      border-radius: 20px;
+      background:
+        radial-gradient(120% 80% at 70% 0%, #151515 0%, transparent 60%),
+        var(--panel);
       overflow: hidden;
     }
 
-    .map-head {
+    .scene {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: clamp(24px, 4vw, 56px);
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(8px);
+      transition: opacity 360ms ease, transform 360ms ease, visibility 0s linear 360ms;
+    }
+
+    .scene.is-active {
+      opacity: 1;
+      visibility: visible;
+      transform: none;
+      transition: opacity 360ms ease 80ms, transform 360ms ease 80ms, visibility 0s;
+    }
+
+    /* Shared scene pieces */
+
+    .window {
+      width: min(100%, 560px);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--raised);
+      box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.8);
+      overflow: hidden;
+    }
+
+    .chrome-row {
       display: flex;
-      justify-content: space-between;
-      gap: 16px;
-      padding: 14px 20px;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
       border-bottom: 1px solid var(--line);
+    }
+
+    .dots { display: flex; gap: 6px; }
+    .dots i { width: 9px; height: 9px; border-radius: 50%; background: #2c2c2c; }
+
+    .omni {
+      flex: 1;
+      min-width: 0;
+      height: 30px;
+      padding: 0 14px;
+      border-radius: 999px;
+      background: var(--bg);
       color: var(--muted);
+      font-size: 13px;
+      line-height: 30px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .omni b { color: var(--text); font-weight: 400; }
+
+    .tool {
+      position: relative;
+      display: grid;
+      place-items: center;
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+    }
+
+    .tool.is-target::after {
+      content: '';
+      position: absolute;
+      inset: -3px;
+      border: 1.5px solid var(--brand-light);
+      border-radius: 10px;
+      opacity: 0;
+    }
+
+    .page {
+      padding: 22px;
+      display: grid;
+      grid-template-columns: 88px 1fr;
+      gap: 18px;
+    }
+
+    .poster { height: 128px; border-radius: 8px; background: var(--raised-2); }
+
+    .page h3 {
+      margin: 2px 0 6px;
+      font-size: 19px;
+      font-weight: 500;
+      letter-spacing: -0.02em;
+    }
+
+    .page .meta { color: var(--muted); font-size: 13px; }
+
+    .bars { margin-top: 16px; display: grid; gap: 8px; }
+    .bars i { display: block; height: 7px; border-radius: 4px; background: var(--raised-2); }
+
+    .caption {
+      position: absolute;
+      left: clamp(24px, 3vw, 32px);
+      right: clamp(24px, 3vw, 32px);
+      bottom: clamp(20px, 3vw, 28px);
+      color: var(--dim);
       font-size: 13px;
     }
 
-    .map-row {
+    /* Scene 1: one click */
+
+    .tabs-row {
+      display: flex;
+      gap: 4px;
+      padding: 8px 12px 0;
+    }
+
+    .tabs-row span {
+      padding: 6px 12px;
+      border-radius: 8px 8px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .tabs-row .on { background: var(--raised-2); color: var(--text); }
+
+    .tabs-row .new-tab {
+      width: 0;
+      padding: 6px 0;
+      overflow: hidden;
+      opacity: 0;
+    }
+
+    .shot { display: grid; }
+    .shot > * { grid-area: 1 / 1; }
+
+    .player {
       display: grid;
-      grid-template-columns: 96px 1fr 28px 1fr;
+      place-items: center;
+      background: #000;
+      color: var(--dim);
+      font-size: 13px;
+      opacity: 0;
+    }
+
+    .omni { position: relative; }
+    .omni .url-vf { position: absolute; left: 14px; opacity: 0; }
+
+    .scene.is-active .tool.is-target::after { animation: ring 700ms ease 900ms 1 forwards; }
+    .scene.is-active .new-tab { animation: open-tab 380ms ease 1600ms forwards; }
+    .scene.is-active .player { animation: appear 300ms ease 1800ms forwards; }
+    .scene.is-active .tabs-row .first { animation: tab-off 1ms linear 1800ms forwards; }
+    .scene.is-active .omni .url-imdb { animation: vanish 200ms ease 1800ms forwards; }
+    .scene.is-active .omni .url-vf { animation: appear 200ms ease 1900ms forwards; }
+
+    @keyframes ring { 0% { opacity: 0; transform: scale(1.35); } 40% { opacity: 1; transform: scale(1); } 100% { opacity: 0; } }
+    @keyframes open-tab { to { width: 96px; padding: 6px 12px; opacity: 1; } }
+    @keyframes appear { to { opacity: 1; } }
+    @keyframes tab-off { to { background: transparent; color: var(--muted); } }
+    @keyframes vanish { to { opacity: 0; } }
+
+    /* Scene 2: exact episode */
+
+    .resolve {
+      width: min(100%, 520px);
+      display: grid;
+      gap: 10px;
+    }
+
+    .resolve .row {
+      display: grid;
+      grid-template-columns: 96px 1fr auto;
       align-items: center;
       gap: 16px;
-      padding: 18px 20px;
-      font-family: var(--mono);
+      padding: 15px 18px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--raised);
       font-size: 14px;
     }
 
-    .map-row + .map-row { border-top: 1px solid var(--line); }
+    .resolve .k { color: var(--muted); font-size: 13px; }
+    .resolve .v { font-variant-numeric: tabular-nums; }
+    .resolve .no .v { color: var(--dim); text-decoration: line-through; }
+    .resolve .note { color: var(--dim); font-size: 12px; }
+    .resolve .yes .note { color: var(--brand-light); }
 
-    .map-kind {
-      font-family: var(--sans);
-      color: var(--muted);
-      font-size: 13px;
-    }
-
-    .map-from { color: var(--muted); overflow-wrap: anywhere; }
-    .map-from b { color: var(--ink); font-weight: 500; }
-
-    .map-arrow { color: var(--faint); text-align: center; }
-
-    .map-to { overflow-wrap: anywhere; }
-    .map-to b { color: var(--brand-text); font-weight: 600; }
-
-    .map-note {
-      grid-column: 2 / -1;
-      margin-top: -6px;
-      font-family: var(--sans);
-      color: var(--muted);
-      font-size: 13px;
-    }
-
-    /* ---------- Sections ---------- */
-
-    section { padding: clamp(64px, 10vw, 128px) 0 0; }
-
-    .section-head {
-      display: grid;
-      grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
-      gap: 24px 56px;
-      align-items: end;
-      margin-bottom: 48px;
-    }
-
-    .num {
-      display: block;
-      margin-bottom: 16px;
-      color: var(--faint);
-      font-family: var(--mono);
-      font-size: 12px;
-    }
-
-    h2 {
-      font-size: clamp(34px, 5vw, 52px);
-      line-height: 1.04;
-    }
-
-    .section-head p {
-      margin: 0;
-      color: var(--muted);
-      font-size: 17px;
-    }
-
-    /* Pipeline */
-
-    .steps {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      border-top: 1px solid var(--ink);
-    }
-
-    .step {
-      padding: 24px 28px 8px 0;
-    }
-
-    .step + .step {
-      padding-left: 28px;
-      border-left: 1px solid var(--line);
-    }
-
-    .step h3 {
-      margin: 0 0 10px;
-      font-size: 16px;
-      font-weight: 600;
-      letter-spacing: -0.01em;
-    }
-
-    .step p {
-      margin: 0 0 16px;
-      color: var(--muted);
-      font-size: 15px;
-    }
-
-    pre {
-      margin: 0;
-      padding: 14px 16px;
-      border-radius: 10px;
-      background: var(--code-bg);
-      font-family: var(--mono);
-      font-size: 12.5px;
-      line-height: 1.6;
-      overflow-x: auto;
-    }
-
-    .c { color: var(--faint); }
-    .k { color: var(--brand-text); }
-
-    /* Behaviour table */
-
-    .split {
-      display: grid;
-      grid-template-columns: minmax(0, 6fr) minmax(0, 5fr);
-      gap: 56px;
-      align-items: start;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 15px;
-    }
-
-    th, td {
-      padding: 16px 0;
-      border-bottom: 1px solid var(--line);
-      text-align: left;
-      vertical-align: top;
-    }
-
-    th {
-      padding-top: 0;
-      color: var(--faint);
-      font-size: 12px;
-      font-weight: 500;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      border-bottom-color: var(--ink);
-    }
-
-    th:first-child,
-    td:first-child {
-      width: 46%;
-      padding-right: 24px;
-      font-weight: 500;
-    }
-
-    td:last-child { color: var(--muted); }
-
-    .aside {
-      margin: 0;
-      padding-top: 6px;
-      color: var(--muted);
-      font-size: 15px;
-    }
-
-    .aside p { margin: 0 0 16px; }
-
-    .badge {
-      display: inline-grid;
-      place-items: center;
-      min-width: 18px;
-      height: 18px;
-      padding: 0 5px;
-      border-radius: 9px;
+    .resolve .result {
+      margin-top: 6px;
+      padding: 18px;
+      border-radius: 12px;
       background: var(--brand);
       color: #fff;
-      font-size: 11px;
-      font-weight: 700;
-      vertical-align: 1px;
+      font-size: 15px;
+      font-variant-numeric: tabular-nums;
     }
 
-    /* Popup replica (matches popup.css in the extension) */
+    .resolve .result span { display: block; margin-bottom: 4px; color: rgba(255, 255, 255, 0.65); font-size: 12px; }
 
-    .stage {
+    .scene.is-active .resolve > * { animation: rise 420ms ease both; }
+    .scene.is-active .resolve > :nth-child(2) { animation-delay: 120ms; }
+    .scene.is-active .resolve > :nth-child(3) { animation-delay: 240ms; }
+    .scene.is-active .resolve > :nth-child(4) { animation-delay: 360ms; }
+    .scene.is-active .resolve > :nth-child(5) { animation-delay: 560ms; }
+
+    @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
+    /* Scene 3: resume */
+
+    .resume {
+      width: min(100%, 540px);
       display: grid;
-      place-items: center;
-      padding: clamp(28px, 5vw, 56px) 16px;
-      border-radius: 20px;
-      background:
-        radial-gradient(circle at 1px 1px, var(--line) 1px, transparent 0) 0 0 / 16px 16px,
-        var(--bg);
-      border: 1px solid var(--line);
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 18px;
     }
+
+    .card {
+      padding: 20px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--raised);
+    }
+
+    .card .k { color: var(--dim); font-size: 12px; }
+    .card .t { margin-top: 10px; font-size: 18px; font-weight: 500; letter-spacing: -0.02em; }
+    .card .d { margin-top: 4px; color: var(--muted); font-size: 13px; }
+
+    .card .ep {
+      display: inline-block;
+      margin-top: 14px;
+      padding: 4px 9px;
+      border-radius: 6px;
+      background: var(--raised-2);
+      font-size: 13px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .card.out { border-color: #3a1b26; background: #170d11; }
+    .card.out .ep { background: var(--brand); color: #fff; }
+    .card .was { margin-left: 8px; color: var(--dim); font-size: 12px; text-decoration: line-through; }
+
+    .arrow { color: var(--dim); font-size: 20px; }
+
+    .scene.is-active .card.out { animation: rise 420ms ease 300ms both; }
+
+    /* Scene 4: popup (mirrors popup.css in dark mode) */
 
     .popup {
-      --p-bg: #ffffff;
-      --p-fg: #161616;
-      --p-muted: #73736f;
-      --p-faint: #a3a39e;
-      --p-hover: #f4f4f2;
-      --p-line: #ebebe8;
-      --p-tag: #f0f0ed;
       width: 320px;
       max-width: 100%;
       border-radius: 12px;
-      background: var(--p-bg);
-      color: var(--p-fg);
-      font: 13px/1.35 var(--sans);
-      box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.06), 0 18px 48px -12px rgba(0, 0, 0, 0.28);
+      background: #1b1b1b;
+      color: #f2f2ef;
+      font-size: 13px;
+      line-height: 1.35;
+      box-shadow: 0 0 0 1px #2c2c2c, 0 30px 80px -20px rgba(0, 0, 0, 0.9);
       overflow: hidden;
     }
 
@@ -434,497 +495,468 @@
       align-items: center;
       gap: 8px;
       padding: 12px 14px 10px;
-      border-bottom: 1px solid var(--p-line);
+      border-bottom: 1px solid #2c2c2c;
     }
 
-    .popup header svg { width: 18px; height: 18px; }
-    .popup .name { font-weight: 650; letter-spacing: -0.01em; }
-
-    .popup .section {
-      margin-left: auto;
-      color: var(--p-faint);
-      font-size: 11px;
-      font-weight: 500;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-    }
-
+    .popup .name { font-weight: 600; letter-spacing: -0.01em; }
+    .popup .section { margin-left: auto; color: #6e6e6a; font-size: 11px; font-weight: 500; letter-spacing: 0.04em; text-transform: uppercase; }
     .popup ul { list-style: none; margin: 0; padding: 6px; }
+    .popup li { display: flex; align-items: center; gap: 10px; padding: 8px 8px 8px 10px; border-radius: 8px; }
+    .popup li.hl { background: #262626; }
+    .popup .txt { flex: 1; min-width: 0; }
+    .popup .ttl { display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-weight: 500; }
+    .popup .mt { display: block; margin-top: 1px; color: #9b9b96; font-size: 11.5px; }
+    .popup .tag { padding: 2px 6px; border-radius: 5px; background: #2a2a2a; color: #9b9b96; font-size: 11px; font-weight: 500; font-variant-numeric: tabular-nums; }
+    .popup li.hl .tag { background: #1b1b1b; }
+    .popup .x { width: 20px; color: #6e6e6a; text-align: center; visibility: hidden; }
+    .popup li.hl .x { visibility: visible; }
 
-    .popup li {
+    .scene.is-active .popup li { animation: rise 380ms ease both; }
+    .scene.is-active .popup li:nth-child(2) { animation-delay: 80ms; }
+    .scene.is-active .popup li:nth-child(3) { animation-delay: 160ms; }
+    .scene.is-active .popup li:nth-child(4) { animation-delay: 240ms; }
+    .scene.is-active .popup li:nth-child(5) { animation-delay: 320ms; }
+
+    /* Scene 5: right-click menu */
+
+    .menu-wrap { width: min(100%, 420px); }
+
+    .toolbar {
       display: flex;
       align-items: center;
-      gap: 10px;
-      padding: 8px 8px 8px 10px;
-      border-radius: 8px;
+      gap: 8px;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--raised);
     }
 
-    .popup li.hover { background: var(--p-hover); }
-    .popup .text { flex: 1; min-width: 0; }
-
-    .popup .title {
-      display: block;
-      overflow: hidden;
-      white-space: nowrap;
-      text-overflow: ellipsis;
-      font-weight: 500;
+    .menu {
+      margin: 8px 0 0 auto;
+      width: 280px;
+      max-width: 100%;
+      padding: 6px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #1a1a1a;
+      box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.9);
+      font-size: 13px;
     }
 
-    .popup .meta {
-      display: block;
-      margin-top: 1px;
-      color: var(--p-muted);
-      font-size: 11.5px;
+    .menu div { padding: 8px 10px; border-radius: 6px; }
+    .menu div.hl { background: var(--brand); }
+    .menu .sep { height: 1px; padding: 0; margin: 6px 4px; background: var(--line); }
+    .menu .sys { color: var(--dim); }
+
+    .scene.is-active .menu { animation: rise 320ms ease 200ms both; }
+
+    /* Scene 6: local only */
+
+    .store {
+      width: min(100%, 520px);
+      padding: 22px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--raised);
     }
 
-    .popup .tag {
-      padding: 2px 6px;
-      border-radius: 5px;
-      background: var(--p-tag);
-      color: var(--p-muted);
-      font-size: 11px;
-      font-weight: 500;
+    .store .head {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .store .entry {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px 16px;
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid var(--line);
+      font-size: 14px;
       font-variant-numeric: tabular-nums;
     }
 
-    .popup li.hover .tag { background: var(--p-bg); }
+    .store .entry span:nth-child(even) { color: var(--muted); text-align: right; }
 
-    .popup .x {
-      width: 24px;
-      color: var(--p-faint);
-      font-size: 15px;
-      text-align: center;
-      visibility: hidden;
-    }
-
-    .popup li.hover .x { visibility: visible; }
-
-    @media (prefers-color-scheme: dark) {
-      :root:not([data-theme="light"]) .popup {
-        --p-bg: #1b1b1b;
-        --p-fg: #f2f2ef;
-        --p-muted: #9b9b96;
-        --p-faint: #6e6e6a;
-        --p-hover: #262626;
-        --p-line: #2c2c2c;
-        --p-tag: #2a2a2a;
-      }
-    }
-
-    :root[data-theme="dark"] .popup {
-      --p-bg: #1b1b1b;
-      --p-fg: #f2f2ef;
-      --p-muted: #9b9b96;
-      --p-faint: #6e6e6a;
-      --p-hover: #262626;
-      --p-line: #2c2c2c;
-      --p-tag: #2a2a2a;
-    }
-
-    .rules {
-      list-style: none;
-      margin: 0;
-      padding: 0;
-      border-top: 1px solid var(--ink);
-    }
-
-    .rules li {
+    .stats {
       display: grid;
-      grid-template-columns: 120px 1fr;
-      gap: 16px;
-      padding: 16px 0;
-      border-bottom: 1px solid var(--line);
-      font-size: 15px;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 18px;
     }
 
-    .rules b { font-weight: 600; }
-    .rules span { color: var(--muted); }
+    .stat { padding: 14px; border-radius: 10px; background: var(--bg); }
+    .stat strong { display: block; font-size: 26px; font-weight: 400; letter-spacing: -0.03em; }
+    .stat span { color: var(--muted); font-size: 12px; }
 
-    /* Decisions */
+    .scene.is-active .stat { animation: rise 380ms ease both; }
+    .scene.is-active .stat:nth-child(2) { animation-delay: 100ms; }
+    .scene.is-active .stat:nth-child(3) { animation-delay: 200ms; }
 
-    .decisions {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 0 56px;
-      border-top: 1px solid var(--ink);
-    }
-
-    .decision {
-      padding: 24px 0;
-      border-bottom: 1px solid var(--line);
-    }
-
-    .decision h3 {
-      margin: 0 0 8px;
-      font-size: 16px;
-      font-weight: 600;
-      letter-spacing: -0.01em;
-    }
-
-    .decision p {
-      margin: 0;
-      color: var(--muted);
-      font-size: 15px;
-    }
-
-    /* Install */
+    /* ---------- Install ---------- */
 
     .install {
-      display: grid;
-      grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
-      gap: 56px;
-      align-items: start;
+      padding-top: clamp(72px, 9vw, 120px);
+      padding-bottom: clamp(96px, 12vw, 160px);
+      border-top: 1px solid var(--line-soft);
     }
 
-    .install ol {
+    .install-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: end;
+      justify-content: space-between;
+      gap: 24px 48px;
+      margin-bottom: 48px;
+    }
+
+    h2 {
+      font-size: clamp(34px, 4.6vw, 56px);
+      line-height: 1.05;
+    }
+
+    .install-head p {
+      max-width: 30em;
+      margin: 16px 0 0;
+      color: var(--muted);
+      font-size: 17px;
+    }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
       margin: 0;
       padding: 0;
       list-style: none;
       counter-reset: step;
-      border-top: 1px solid var(--ink);
     }
 
-    .install li {
-      position: relative;
-      padding: 16px 0 16px 44px;
-      border-bottom: 1px solid var(--line);
+    .steps li {
+      display: flex;
+      flex-direction: column;
+      min-height: 220px;
+      padding: 24px;
+      border: 1px solid var(--line-soft);
+      border-radius: 16px;
+      background: var(--panel);
       counter-increment: step;
-      font-size: 15px;
     }
 
-    .install li::before {
-      content: counter(step, decimal-leading-zero);
-      position: absolute;
-      left: 0;
-      top: 18px;
-      color: var(--faint);
-      font-family: var(--mono);
-      font-size: 12px;
-    }
-
-    .install li span { color: var(--muted); }
-
-    .install .note {
-      margin: 20px 0 0;
+    .steps li::before {
+      content: counter(step);
+      display: grid;
+      place-items: center;
+      width: 30px;
+      height: 30px;
+      border: 1px solid var(--line);
+      border-radius: 50%;
       color: var(--muted);
-      font-size: 14px;
+      font-size: 13px;
+    }
+
+    .steps h3 {
+      margin: 48px 0 8px;
+      font-size: 18px;
+      font-weight: 500;
+      letter-spacing: -0.02em;
+    }
+
+    .steps p { margin: 0; color: var(--muted); font-size: 14px; }
+    .steps b { color: var(--text); }
+
+    .kbd {
+      padding: 2px 7px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--raised);
+      color: var(--text);
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .fine {
+      margin: 24px 0 0;
+      color: var(--dim);
+      font-size: 13px;
     }
 
     /* ---------- Footer ---------- */
 
-    footer {
-      margin-top: clamp(80px, 12vw, 144px);
-      border-top: 1px solid var(--line);
-    }
+    footer { border-top: 1px solid var(--line-soft); }
 
     footer .wrap {
       display: flex;
       flex-wrap: wrap;
-      gap: 8px 24px;
+      gap: 8px 28px;
       padding-top: 28px;
       padding-bottom: 40px;
-      color: var(--muted);
-      font-size: 14px;
+      color: var(--dim);
+      font-size: 13px;
     }
 
+    footer a:hover { color: var(--text); }
     footer .end { margin-left: auto; }
 
-    footer a { text-decoration: none; }
-    footer a:hover { color: var(--ink); }
-
     :focus-visible {
-      outline: 2px solid var(--brand-text);
-      outline-offset: 3px;
-      border-radius: 4px;
+      outline: 2px solid var(--brand-light);
+      outline-offset: 4px;
+      border-radius: 6px;
     }
 
     /* ---------- Small screens ---------- */
 
-    @media (max-width: 820px) {
-      .section-head, .split, .install { grid-template-columns: 1fr; gap: 32px; }
-      .steps { grid-template-columns: 1fr; }
-      .step, .step + .step { padding: 24px 0 8px; border-left: 0; }
-      .step + .step { border-top: 1px solid var(--line); }
-      .decisions { grid-template-columns: 1fr; }
+    @media (max-width: 900px) {
+      .features { grid-template-columns: 1fr; }
+      .tabs { padding-left: 0; }
+      .stage { min-height: 480px; }
+      .steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
 
-    @media (max-width: 640px) {
+    @media (max-width: 560px) {
       .bar nav a.hide-sm { display: none; }
-      .map-head span:last-child { display: none; }
-      .map-row {
-        grid-template-columns: 1fr;
-        gap: 4px;
-      }
-      .map-arrow { display: none; }
-      .map-to::before { content: '→ '; color: var(--faint); }
-      .map-note { grid-column: 1; margin-top: 4px; }
-      .rules li { grid-template-columns: 1fr; gap: 2px; }
-      th:first-child, td:first-child { width: 42%; }
+      .stage { min-height: 440px; }
+      .page { grid-template-columns: 64px 1fr; padding: 16px; }
+      .poster { height: 96px; }
+      .caption { display: none; }
+      .resolve .row { grid-template-columns: 1fr auto; gap: 4px 12px; }
+      .resolve .row .k { grid-column: 1 / -1; }
+      .resume { grid-template-columns: 1fr; }
+      .arrow { transform: rotate(90deg); justify-self: center; }
+      .stat strong { font-size: 20px; }
+      .steps { grid-template-columns: 1fr; }
+      .steps li { min-height: 0; }
+      .steps h3 { margin-top: 24px; }
       footer .end { margin-left: 0; }
     }
 
     @media (prefers-reduced-motion: reduce) {
-      * { transition: none !important; }
+      *, *::before, *::after {
+        animation-duration: 1ms !important;
+        animation-delay: 0ms !important;
+        transition-duration: 1ms !important;
+      }
     }
   </style>
 </head>
 <body>
 
-  <div class="wrap bar">
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="mark" viewBox="0 0 128 128">
+      <rect width="128" height="128" rx="30" fill="#7A1E3A"/>
+      <g fill="#fff">
+        <polygon points="104,24 96.93,70.67 57.33,31.07"/>
+        <polygon points="83.49,55.82 68.64,70.67 57.33,59.36 72.18,44.51"/>
+        <polygon points="60.16,79.15 50.26,89.05 38.95,77.74 48.85,67.84"/>
+        <polygon points="41.77,97.54 36.12,103.2 24.8,91.88 30.46,86.23"/>
+      </g>
+    </symbol>
+  </svg>
+
+  <header class="wrap bar">
     <a class="brand" href="#">
-      <svg viewBox="0 0 128 128" aria-hidden="true">
-        <rect width="128" height="128" rx="30" fill="#7A1E3A"/>
-        <g fill="#fff">
-          <polygon points="104,24 96.93,70.67 57.33,31.07"/>
-          <polygon points="83.49,55.82 68.64,70.67 57.33,59.36 72.18,44.51"/>
-          <polygon points="60.16,79.15 50.26,89.05 38.95,77.74 48.85,67.84"/>
-          <polygon points="41.77,97.54 36.12,103.2 24.8,91.88 30.46,86.23"/>
-        </g>
-      </svg>
+      <svg class="mark" width="24" height="24" aria-hidden="true"><use href="#mark"/></svg>
       VidFast launcher
     </a>
     <nav>
-      <a class="hide-sm" href="#how">How it works</a>
+      <a class="hide-sm" href="#features">Features</a>
       <a class="hide-sm" href="#install">Install</a>
       <a href="https://github.com/siddharthaasal/imdb-to-vidfast">GitHub</a>
     </nav>
-  </div>
+  </header>
 
   <main>
-    <div class="wrap hero">
-      <p class="eyebrow">Chrome extension<span>/</span>v1.0.0<span>/</span>Free</p>
-      <h1>From an IMDb page to the player in <em>one click.</em></h1>
-      <p class="lede">
-        VidFast launcher reads the title you’re looking at, works out whether it’s a film,
-        a show or a single episode, and opens it in VidFast in the tab next to yours.
-        It remembers your last five, and picks shows up where you left off.
-      </p>
+    <section class="wrap hero">
+      <h1>Any IMDb title, one click from playing.</h1>
+      <p class="sub">A small Chrome extension that reads the page you’re on and opens it in VidFast. Movies, shows and the exact episode.</p>
       <div class="actions">
-        <a class="button" href="https://github.com/siddharthaasal/imdb-to-vidfast/releases/download/v1.0.0/vidfast-launcher-v1.0.0.zip">
-          Download for Chrome <small>15 KB</small>
-        </a>
-        <a class="link" href="https://github.com/siddharthaasal/imdb-to-vidfast">Read the source</a>
-      </div>
-
-      <div class="mapping" role="figure" aria-label="How IMDb pages map to VidFast links">
-        <div class="map-head">
-          <span>What the click turns into</span>
-          <span class="mono">imdb.com → vidfast.pro</span>
-        </div>
-        <div class="map-row">
-          <span class="map-kind">Movie</span>
-          <span class="map-from">/title/<b>tt0111161</b></span>
-          <span class="map-arrow">→</span>
-          <span class="map-to">/movie/<b>tt0111161</b></span>
-        </div>
-        <div class="map-row">
-          <span class="map-kind">Show</span>
-          <span class="map-from">/title/<b>tt0903747</b></span>
-          <span class="map-arrow">→</span>
-          <span class="map-to">/tv/<b>tt0903747</b>/<b>1</b>/<b>1</b></span>
-          <span class="map-note">Or the last episode you opened, if it’s in your history.</span>
-        </div>
-        <div class="map-row">
-          <span class="map-kind">Episode</span>
-          <span class="map-from">/title/<b>tt1232248</b></span>
-          <span class="map-arrow">→</span>
-          <span class="map-to">/tv/<b>tt0903747</b>/<b>2</b>/<b>5</b></span>
-          <span class="map-note">An episode has its own ID, but the player wants the series ID. Finding it is most of the work.</span>
-        </div>
-      </div>
-    </div>
-
-    <section id="how">
-      <div class="wrap">
-        <div class="section-head">
-          <div>
-            <span class="num">01</span>
-            <h2>Reading the page, <em>carefully.</em></h2>
-          </div>
-          <p>
-            IMDb doesn’t offer an API for this, so the extension reads the page itself. Every value
-            comes from more than one place, so one markup change on IMDb’s side doesn’t break it.
-          </p>
-        </div>
-
-        <div class="steps">
-          <div class="step">
-            <h3>The title ID</h3>
-            <p>Taken from the URL, so it works on desktop, mobile and regional pages like <code>/fr/title/</code>.</p>
-<pre><span class="k">/\/title\/(tt\d{7,})/</span></pre>
-          </div>
-          <div class="step">
-            <h3>What kind of title</h3>
-            <p>Read from the structured data IMDb embeds for search engines, with IMDb’s own page data as a fallback for TV films and shorts.</p>
-<pre><span class="c">// JSON-LD @type</span>
-Movie     <span class="c">→</span> movie
-TVSeries  <span class="c">→</span> series
-TVEpisode <span class="c">→</span> episode</pre>
-          </div>
-          <div class="step">
-            <h3>Series, season, episode</h3>
-            <p>The series ID comes from page data, then structured data, then the “back to series” link. The numbers fall back to the visible <code>S2.E5</code> label.</p>
-<pre><span class="c">// never the episode’s own ID</span>
-seriesId = candidates
-  .find(c =&gt; c &amp;&amp; c !== id)</pre>
-          </div>
-        </div>
+        <a class="btn btn-primary" href="https://github.com/siddharthaasal/imdb-to-vidfast/releases/download/v1.0.0/vidfast-launcher-v1.0.0.zip">Download for Chrome <span>v1.0.0</span></a>
+        <a class="btn btn-ghost" href="https://github.com/siddharthaasal/imdb-to-vidfast">View source</a>
       </div>
     </section>
 
-    <section>
-      <div class="wrap">
-        <div class="section-head">
-          <div>
-            <span class="num">02</span>
-            <h2>One icon, <em>different jobs.</em></h2>
-          </div>
-          <p>
-            The toolbar icon changes what it does depending on the page you’re on, and updates as you move between tabs.
-          </p>
-        </div>
-
-        <div class="split">
-          <table>
-            <thead>
-              <tr><th>Where you are</th><th>What a click does</th></tr>
-            </thead>
-            <tbody>
-              <tr><td>A movie on IMDb</td><td>Opens the movie</td></tr>
-              <tr><td>A show’s main page</td><td>Opens S1 E1, or resumes your last episode</td></tr>
-              <tr><td>An episode page</td><td>Opens that exact episode</td></tr>
-              <tr><td>Any other website</td><td>Shows your recent titles</td></tr>
-              <tr><td>IMDb people, lists, games</td><td>Nothing. The icon greys out.</td></tr>
-            </tbody>
-          </table>
-          <div class="aside">
-            <p>On IMDb a click is already taken, so your recent titles are in the icon’s <b>right-click menu</b> instead.</p>
-            <p>If the season or episode can’t be read, for example a season listed as “Unknown”, it opens the show at the start and shows a <span class="badge">?</span> on the icon rather than guessing.</p>
-          </div>
-        </div>
+    <section class="wrap features" id="features" aria-label="Features">
+      <div class="tabs" role="tablist" aria-orientation="vertical">
+        <button class="tab is-active" role="tab" aria-selected="true" aria-controls="scene-1" id="tab-1">
+          <span class="tab-title">One-click launch</span>
+          <span class="tab-body"><span><p>On any IMDb title page, click the icon. VidFast opens in the tab right next to yours.</p></span></span>
+          <span class="tab-track"><i></i></span>
+        </button>
+        <button class="tab" role="tab" aria-selected="false" aria-controls="scene-2" id="tab-2" tabindex="-1">
+          <span class="tab-title">The exact episode</span>
+          <span class="tab-body"><span><p>An episode has its own IMDb ID, but the player needs the show’s. The extension works out the series, season and episode for you.</p></span></span>
+          <span class="tab-track"><i></i></span>
+        </button>
+        <button class="tab" role="tab" aria-selected="false" aria-controls="scene-3" id="tab-3" tabindex="-1">
+          <span class="tab-title">Picks up where you left off</span>
+          <span class="tab-body"><span><p>Open a show’s main page again and it continues from your last episode, not from the pilot.</p></span></span>
+          <span class="tab-track"><i></i></span>
+        </button>
+        <button class="tab" role="tab" aria-selected="false" aria-controls="scene-4" id="tab-4" tabindex="-1">
+          <span class="tab-title">Your last five</span>
+          <span class="tab-body"><span><p>Click the icon on any other site to see your recent titles. One entry per show, so a binge doesn’t crowd out the rest.</p></span></span>
+          <span class="tab-track"><i></i></span>
+        </button>
+        <button class="tab" role="tab" aria-selected="false" aria-controls="scene-5" id="tab-5" tabindex="-1">
+          <span class="tab-title">Right there on IMDb</span>
+          <span class="tab-body"><span><p>On IMDb a click launches, so your history lives in the icon’s right-click menu instead.</p></span></span>
+          <span class="tab-track"><i></i></span>
+        </button>
+        <button class="tab" role="tab" aria-selected="false" aria-controls="scene-6" id="tab-6" tabindex="-1">
+          <span class="tab-title">Stays on your device</span>
+          <span class="tab-body"><span><p>History is kept in your browser’s local storage. No server, no account, no analytics.</p></span></span>
+          <span class="tab-track"><i></i></span>
+        </button>
       </div>
-    </section>
 
-    <section>
-      <div class="wrap">
-        <div class="section-head">
-          <div>
-            <span class="num">03</span>
-            <h2>It remembers <em>where you were.</em></h2>
-          </div>
-          <p>
-            Every launch is saved in your browser. Nothing leaves it: there’s no server, no account and no analytics.
-          </p>
-        </div>
-
-        <div class="split">
-          <div class="stage">
-            <div class="popup" aria-label="The extension’s recent-titles popup">
-              <header>
-                <svg viewBox="0 0 128 128" aria-hidden="true">
-                  <rect width="128" height="128" rx="30" fill="#7A1E3A"/>
-                  <g fill="#fff">
-                    <polygon points="104,24 96.93,70.67 57.33,31.07"/>
-                    <polygon points="83.49,55.82 68.64,70.67 57.33,59.36 72.18,44.51"/>
-                    <polygon points="60.16,79.15 50.26,89.05 38.95,77.74 48.85,67.84"/>
-                    <polygon points="41.77,97.54 36.12,103.2 24.8,91.88 30.46,86.23"/>
-                  </g>
-                </svg>
-                <span class="name">VidFast</span>
-                <span class="section">Recent</span>
-              </header>
-              <ul>
-                <li class="hover">
-                  <span class="text"><span class="title">Breaking Bad</span><span class="meta">Series · 12 min ago</span></span>
-                  <span class="tag">S2 E5</span><span class="x">×</span>
-                </li>
-                <li>
-                  <span class="text"><span class="title">The Shawshank Redemption</span><span class="meta">Movie · 3 h ago</span></span>
-                  <span class="x">×</span>
-                </li>
-                <li>
-                  <span class="text"><span class="title">Severance</span><span class="meta">Series · Yesterday</span></span>
-                  <span class="tag">S1 E7</span><span class="x">×</span>
-                </li>
-                <li>
-                  <span class="text"><span class="title">Past Lives</span><span class="meta">Movie · 4 days ago</span></span>
-                  <span class="x">×</span>
-                </li>
-              </ul>
+      <div class="stage">
+        <!-- 1 · One click -->
+        <div class="scene is-active" id="scene-1" role="tabpanel" aria-labelledby="tab-1">
+          <div class="window">
+            <div class="tabs-row">
+              <span class="on first">The Shawshank Re…</span>
+              <span class="on new-tab">VidFast</span>
+            </div>
+            <div class="chrome-row">
+              <span class="dots"><i></i><i></i><i></i></span>
+              <span class="omni"><span class="url-imdb">imdb.com/title/<b>tt0111161</b></span><span class="url-vf">vidfast.pro/movie/<b>tt0111161</b></span></span>
+              <span class="tool is-target"><svg class="mark" width="18" height="18" aria-hidden="true"><use href="#mark"/></svg></span>
+            </div>
+            <div class="shot">
+              <div class="page">
+                <div class="poster"></div>
+                <div>
+                  <h3>The Shawshank Redemption</h3>
+                  <div class="meta">1994 · Movie · 2h 22m</div>
+                  <div class="bars"><i style="width:92%"></i><i style="width:80%"></i><i style="width:86%"></i><i style="width:48%"></i></div>
+                </div>
+              </div>
+              <div class="player">Playing in VidFast</div>
             </div>
           </div>
+          <span class="caption">imdb.com/title/tt0111161 → vidfast.pro/movie/tt0111161</span>
+        </div>
 
-          <ul class="rules">
-            <li><b>Five titles</b><span>The newest five are kept. Opening a sixth drops the oldest.</span></li>
-            <li><b>One per show</b><span>Watching three episodes of a show leaves one entry, updated to the latest, so a binge doesn’t push everything else out.</span></li>
-            <li><b>Resume</b><span>Open a show’s main page again and it continues from that entry instead of S1 E1.</span></li>
-            <li><b>Your call</b><span>Click a row to reopen it. The × removes it.</span></li>
-          </ul>
+        <!-- 2 · Exact episode -->
+        <div class="scene" id="scene-2" role="tabpanel" aria-labelledby="tab-2">
+          <div class="resolve">
+            <div class="row no"><span class="k">Episode ID</span><span class="v">tt1232248</span><span class="note">Not used</span></div>
+            <div class="row yes"><span class="k">Series</span><span class="v">Breaking Bad · tt0903747</span><span class="note">Found</span></div>
+            <div class="row yes"><span class="k">Season</span><span class="v">2</span><span class="note">Found</span></div>
+            <div class="row yes"><span class="k">Episode</span><span class="v">5 · Breakage</span><span class="note">Found</span></div>
+            <div class="result"><span>Opens</span>vidfast.pro/tv/tt0903747/2/5</div>
+          </div>
+        </div>
+
+        <!-- 3 · Resume -->
+        <div class="scene" id="scene-3" role="tabpanel" aria-labelledby="tab-3">
+          <div class="resume">
+            <div class="card">
+              <div class="k">You open</div>
+              <div class="t">Breaking Bad</div>
+              <div class="d">The show’s main page</div>
+              <div class="ep">Last opened S3 E7</div>
+            </div>
+            <span class="arrow" aria-hidden="true">→</span>
+            <div class="card out">
+              <div class="k">VidFast plays</div>
+              <div class="t">Breaking Bad</div>
+              <div class="d">Right where you were</div>
+              <div class="ep">S3 E7</div><span class="was">S1 E1</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4 · Popup -->
+        <div class="scene" id="scene-4" role="tabpanel" aria-labelledby="tab-4">
+          <div class="popup">
+            <header>
+              <svg class="mark" width="18" height="18" aria-hidden="true"><use href="#mark"/></svg>
+              <span class="name">VidFast</span>
+              <span class="section">Recent</span>
+            </header>
+            <ul>
+              <li class="hl"><span class="txt"><span class="ttl">Breaking Bad</span><span class="mt">Series · 12 min ago</span></span><span class="tag">S3 E7</span><span class="x">×</span></li>
+              <li><span class="txt"><span class="ttl">The Shawshank Redemption</span><span class="mt">Movie · 3 h ago</span></span><span class="x">×</span></li>
+              <li><span class="txt"><span class="ttl">Severance</span><span class="mt">Series · Yesterday</span></span><span class="tag">S1 E7</span><span class="x">×</span></li>
+              <li><span class="txt"><span class="ttl">Past Lives</span><span class="mt">Movie · 4 days ago</span></span><span class="x">×</span></li>
+              <li><span class="txt"><span class="ttl">Dark</span><span class="mt">Series · 6 days ago</span></span><span class="tag">S2 E1</span><span class="x">×</span></li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- 5 · Right-click -->
+        <div class="scene" id="scene-5" role="tabpanel" aria-labelledby="tab-5">
+          <div class="menu-wrap">
+            <div class="toolbar">
+              <span class="omni">imdb.com/title/<b>tt0903747</b></span>
+              <span class="tool"><svg class="mark" width="18" height="18" aria-hidden="true"><use href="#mark"/></svg></span>
+            </div>
+            <div class="menu">
+              <div class="hl">Breaking Bad · S3 E7</div>
+              <div>The Shawshank Redemption</div>
+              <div>Severance · S1 E7</div>
+              <div>Past Lives</div>
+              <div>Dark · S2 E1</div>
+              <div class="sep"></div>
+              <div class="sys">Manage extension</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 6 · Local only -->
+        <div class="scene" id="scene-6" role="tabpanel" aria-labelledby="tab-6">
+          <div class="store">
+            <div class="head"><span>Saved in this browser</span><span>chrome.storage.local</span></div>
+            <div class="entry">
+              <span>Breaking Bad</span><span>S3 E7</span>
+              <span>The Shawshank Redemption</span><span>Movie</span>
+              <span>Severance</span><span>S1 E7</span>
+            </div>
+            <div class="stats">
+              <div class="stat"><strong>0</strong><span>Servers</span></div>
+              <div class="stat"><strong>0</strong><span>Accounts</span></div>
+              <div class="stat"><strong>5</strong><span>Titles kept</span></div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
 
-    <section>
+    <section class="install" id="install">
       <div class="wrap">
-        <div class="section-head">
+        <div class="install-head">
           <div>
-            <span class="num">04</span>
-            <h2>Small on purpose.</h2>
+            <h2>Install in a minute.</h2>
+            <p>It isn’t on the Chrome Web Store, so it installs the way developers load their own extensions. Works in Chrome, Brave, Edge and Arc on desktop.</p>
           </div>
-          <p>
-            About 640 lines of plain JavaScript, HTML and CSS across eight files. Here are a few of the decisions behind it.
-          </p>
+          <a class="btn btn-primary" href="https://github.com/siddharthaasal/imdb-to-vidfast/releases/download/v1.0.0/vidfast-launcher-v1.0.0.zip">Download v1.0.0 <span>15 KB</span></a>
         </div>
 
-        <div class="decisions">
-          <div class="decision">
-            <h3>No framework, no build step</h3>
-            <p>The folder you load is the source. Edit a file, press reload on the extensions page, done.</p>
-          </div>
-          <div class="decision">
-            <h3>A self-contained page reader</h3>
-            <p>The detector runs inside IMDb’s page, where Chrome passes in the function body alone. So it carries no imports, and it’s easy to test in DevTools.</p>
-          </div>
-          <div class="decision">
-            <h3>Stale data is ignored</h3>
-            <p>IMDb can change pages without reloading. Any page data whose ID doesn’t match the URL is set aside instead of trusted.</p>
-          </div>
-          <div class="decision">
-            <h3>Launches outlive the popup</h3>
-            <p>A popup closes as soon as the new tab takes focus, so it hands the launch to the background worker, which finishes saving it.</p>
-          </div>
-          <div class="decision">
-            <h3>One place for the domain</h3>
-            <p>The VidFast address lives in a single file. If it moves, the fix is one line.</p>
-          </div>
-          <div class="decision">
-            <h3>Ready for another source</h3>
-            <p>The detector returns a plain <code>{ id, type, season, episode }</code> shape, so a second site like TMDB only needs a second detector.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section id="install">
-      <div class="wrap install">
-        <div>
-          <span class="num">05</span>
-          <h2>Install in <em>a minute.</em></h2>
-          <p class="note">It isn’t on the Chrome Web Store, so it installs the way developers load their own extensions. Desktop Chrome, or Chromium browsers like Brave, Edge and Arc.</p>
-          <div class="actions">
-            <a class="button" href="https://github.com/siddharthaasal/imdb-to-vidfast/releases/download/v1.0.0/vidfast-launcher-v1.0.0.zip">
-              Download v1.0.0 <small>15 KB</small>
-            </a>
-          </div>
-        </div>
-        <ol>
-          <li>Unzip the download somewhere it can stay. <span>Chrome loads the extension from that folder.</span></li>
-          <li>Open <code>chrome://extensions</code> and turn on <b>Developer mode</b>. <span>The switch is at the top right.</span></li>
-          <li>Click <b>Load unpacked</b> and choose the <code>vidfast-launcher</code> folder.</li>
-          <li>Pin it from the puzzle-piece menu, then click it on any IMDb title.</li>
+        <ol class="steps">
+          <li>
+            <h3>Unzip it</h3>
+            <p>Put the <b>vidfast-launcher</b> folder somewhere it can stay. Chrome loads the extension from it.</p>
+          </li>
+          <li>
+            <h3>Open extensions</h3>
+            <p>Go to <span class="kbd">chrome://extensions</span> and switch on <b>Developer mode</b>, top right.</p>
+          </li>
+          <li>
+            <h3>Load unpacked</h3>
+            <p>Click <b>Load unpacked</b> and choose the folder you just unzipped.</p>
+          </li>
+          <li>
+            <h3>Pin and go</h3>
+            <p>Pin it from the puzzle-piece menu, then click it on any IMDb title.</p>
+          </li>
         </ol>
-        <!-- Screen recording goes here once it's ready:
-        <figure class="recording"><video src="install.mp4" autoplay muted loop playsinline></video></figure> -->
+        <p class="fine">To update, replace the folder’s files with a newer release and press reload on the extensions page. Your history stays.</p>
+        <!-- Screen recording slot, once it's ready:
+        <video class="recording" src="install.mp4" autoplay muted loop playsinline></video> -->
       </div>
     </section>
   </main>
@@ -932,11 +964,69 @@ seriesId = candidates
   <footer>
     <div class="wrap">
       <span>Built by Siddharth Aasal, 2026</span>
-      <a href="https://github.com/siddharthaasal/imdb-to-vidfast">Source on GitHub</a>
+      <a href="https://github.com/siddharthaasal/imdb-to-vidfast">GitHub</a>
       <a href="https://github.com/siddharthaasal/imdb-to-vidfast/releases/latest">Releases</a>
       <span class="end">Not affiliated with IMDb or VidFast.</span>
     </div>
   </footer>
 
+  <script>
+    (() => {
+      const section = document.querySelector('.features');
+      const tabs = [...section.querySelectorAll('.tab')];
+      const scenes = [...section.querySelectorAll('.scene')];
+      let current = 0;
+
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        section.classList.add('is-static');
+      }
+
+      function restart(el) {
+        el.classList.remove('is-active');
+        void el.offsetWidth; // force reflow so CSS animations replay
+        el.classList.add('is-active');
+      }
+
+      function show(index, { focus = false, manual = false } = {}) {
+        current = (index + tabs.length) % tabs.length;
+        tabs.forEach((tab, i) => {
+          const on = i === current;
+          tab.setAttribute('aria-selected', on);
+          tab.tabIndex = on ? 0 : -1;
+          if (on) restart(tab); else tab.classList.remove('is-active');
+        });
+        scenes.forEach((scene, i) => {
+          if (i === current) restart(scene); else scene.classList.remove('is-active');
+        });
+        // A click or key press means the visitor is driving; stop auto-advancing.
+        if (manual) section.classList.add('is-static');
+        if (focus) tabs[current].focus();
+      }
+
+      tabs.forEach((tab, i) => {
+        tab.addEventListener('click', () => show(i, { manual: true }));
+        tab.querySelector('.tab-track i').addEventListener('animationend', () => {
+          if (!section.classList.contains('is-static')) show(current + 1);
+        });
+        tab.addEventListener('keydown', (e) => {
+          const step = { ArrowDown: 1, ArrowRight: 1, ArrowUp: -1, ArrowLeft: -1 }[e.key];
+          if (step) {
+            e.preventDefault();
+            show(current + step, { focus: true, manual: true });
+          }
+        });
+      });
+
+      // Pause while the pointer is over the section, and while it's off screen.
+      let hovering = false;
+      let visible = false;
+      const sync = () => section.classList.toggle('is-paused', hovering || !visible);
+      section.addEventListener('mouseenter', () => { hovering = true; sync(); });
+      section.addEventListener('mouseleave', () => { hovering = false; sync(); });
+      new IntersectionObserver(([entry]) => { visible = entry.isIntersecting; sync(); }, { threshold: 0.3 })
+        .observe(section);
+      sync();
+    })();
+  </script>
 </body>
 </html>
