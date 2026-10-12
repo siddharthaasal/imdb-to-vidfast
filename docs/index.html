@@ -85,8 +85,42 @@
     /* ---------- Hero ---------- */
 
     .hero {
-      padding-top: clamp(56px, 10vw, 136px);
-      padding-bottom: clamp(64px, 9vw, 120px);
+      display: grid;
+      grid-template-columns: minmax(0, 6fr) minmax(0, 5fr);
+      align-items: center;
+      gap: clamp(32px, 5vw, 72px);
+      padding-top: clamp(40px, 7vw, 96px);
+      padding-bottom: clamp(64px, 8vw, 112px);
+    }
+
+    /* The hero drawing: a Hairline figure (docs/carousel.js on docs/vendor/hairline-kernel.js) */
+    .figure {
+      position: relative;
+      overflow-x: clip; /* the stage is wider than the column; its sides are empty */
+      --hairline-plate: var(--bg);
+      --hairline-hi: var(--brand-light);
+      --hairline-edge: #7c7c77;
+      --hairline-mid: #44443f;
+      --hairline-lo: #252524;
+      --hairline-stroke: 1;
+    }
+
+    /* The drawing fills about a third of its 5:4 box, so the box is drawn larger than the column. */
+    #figure-stage {
+      width: 128%;
+      margin: -12% -14% -12% -14%;
+    }
+
+    .figure-read {
+      position: absolute;
+      right: 2%;
+      bottom: 6%;
+      z-index: 1;
+      color: var(--dim);
+      font-size: 12px;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 0.02em;
+      pointer-events: none;
     }
 
     h1, h2 {
@@ -710,6 +744,8 @@
     /* ---------- Small screens ---------- */
 
     @media (max-width: 900px) {
+      .hero { grid-template-columns: 1fr; }
+      .figure { max-width: 520px; width: 100%; justify-self: center; }
       .features { grid-template-columns: 1fr; }
       .tabs { padding-left: 0; }
       .stage { min-height: 480px; }
@@ -770,11 +806,17 @@
 
   <main>
     <section class="wrap hero">
-      <h1>Any IMDb title, one click from playing.</h1>
-      <p class="sub">A small Chrome extension that reads the page you’re on and opens it in VidFast. Movies, shows and the exact episode.</p>
-      <div class="actions">
-        <a class="btn btn-primary" href="https://github.com/siddharthaasal/imdb-to-vidfast/releases/download/v1.0.0/vidfast-launcher-v1.0.0.zip">Download for Chrome <span>v1.0.0</span></a>
-        <a class="btn btn-ghost" href="https://github.com/siddharthaasal/imdb-to-vidfast">View source</a>
+      <div>
+        <h1>Any IMDb title, one click from playing.</h1>
+        <p class="sub">A small Chrome extension that reads the page you’re on and opens it in VidFast. Movies, shows and the exact episode.</p>
+        <div class="actions">
+          <a class="btn btn-primary" href="https://github.com/siddharthaasal/imdb-to-vidfast/releases/download/v1.0.0/vidfast-launcher-v1.0.0.zip">Download for Chrome <span>v1.0.0</span></a>
+          <a class="btn btn-ghost" href="https://github.com/siddharthaasal/imdb-to-vidfast">View source</a>
+        </div>
+      </div>
+      <div class="figure">
+        <span class="figure-read" id="figure-read" aria-hidden="true"></span>
+        <div id="figure-stage"></div>
       </div>
     </section>
 
@@ -968,9 +1010,37 @@
       <a href="changelog.html">Changelog</a>
       <a href="privacy.html">Privacy</a>
       <a href="terms.html">Terms</a>
+      <a href="https://hairline.lucasmarkes.com">Drawing engine: Hairline</a>
       <span class="end">Not affiliated with IMDb or VidFast.</span>
     </div>
   </footer>
+
+  <!-- Hero drawing: the Hairline engine (MIT, Lucas Marques; see vendor/hairline-LICENSE.txt) and our carousel figure. -->
+  <script src="vendor/hairline-kernel.js"></script>
+  <script>
+    /*
+     * Mounts one Hairline figure into the hero, the way the package's own host does,
+     * and starts its tour: an unseen pointer that walks the figure on its own,
+     * gives way to a real one, and picks up again after it leaves.
+     */
+    window.hairline = (figure) => {
+      const stage = document.getElementById('figure-stage');
+      const readEl = document.getElementById('figure-read');
+      HL.inject(document);
+      stage.setAttribute('data-hairline', figure.name);
+      stage.setAttribute('role', 'img');
+      stage.setAttribute('aria-label', figure.means);
+      const svg = HL.mk('svg', { viewBox: '0 0 400 320', 'aria-hidden': 'true' }, stage);
+      const read = {
+        _t: null,
+        get textContent() { return this._t; },
+        set textContent(v) { this._t = v == null ? '' : String(v); readEl.textContent = this._t === 'rest' ? '' : this._t; },
+      };
+      figure.mount({ stage, svg, read }, figure.range[1]);
+      HL.tour(stage, figure.tour || HL.LAP);
+    };
+  </script>
+  <script type="module" src="carousel.js"></script>
 
   <script>
     (() => {
