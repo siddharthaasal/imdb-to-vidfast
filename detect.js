@@ -20,7 +20,8 @@ export function detectTitle() {
   for (const el of document.querySelectorAll('script[type="application/ld+json"]')) {
     try {
       const data = JSON.parse(el.textContent);
-      if (data && data['@type']) {
+      // Skip data left over from a different title (client-side navigation).
+      if (data && data['@type'] && (!data.url || data.url.includes(`/title/${id}`))) {
         ld = data;
         break;
       }
@@ -35,6 +36,7 @@ export function detectTitle() {
   try {
     const next = JSON.parse(document.getElementById('__NEXT_DATA__')?.textContent || 'null');
     above = next?.props?.pageProps?.aboveTheFoldData || null;
+    if (above?.id && above.id !== id) above = null; // stale, from another title
   } catch {
     // No Next.js data on this page.
   }

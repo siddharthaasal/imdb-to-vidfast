@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>VidFast launcher</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header>
+    <img class="mark" src="icons/mark.svg" alt="">
+    <span class="name">VidFast</span>
+    <span class="section">Recent</span>
+  </header>
+
+  <ul id="list"></ul>
+
+  <div id="empty" hidden>
+    <p class="empty-title">Nothing here yet</p>
+    <p class="empty-hint">Open a movie or show on IMDb, then click the VidFast icon. Your last five titles show up here.</p>
+  </div>
+
+  <script type="module" src="popup.js"></script>
+</body>
+</html>
