@@ -50,20 +50,20 @@ The path (`movie` or `tv`) picks the player. For episodes, the ID must be the **
 
 ## Phase 3: Remember the last five
 
-- [ ] **Save each launch to `chrome.storage.local`.** Store ID, type, title, season, episode and when it was opened. One entry per show; keep the newest five.
+- [x] **Save each launch to `chrome.storage.local`.** Store ID, type, title, season, episode and when it was opened. One entry per show; keep the newest five.
   *Done when:* opening six titles drops the oldest, and three episodes of one show leave one entry.
-- [ ] **Resume shows from history.** If a series page's show is already in history, open the last episode instead of S1 E1.
+- [x] **Resume shows from history.** If a series page's show is already in history, open the last episode instead of S1 E1.
   *Done when:* reopening a show's main page picks up where you left off.
-- [ ] **Build the recent-titles popup.** Five rows with title, plus S/E for shows. Click a row to reopen it; × removes it. The empty state says how to add one.
+- [x] **Build the recent-titles popup.** Five rows with title, plus S/E for shows. Click a row to reopen it; × removes it. The empty state says how to add one.
   *Done when:* every row reopens the right thing and × removes it.
 
 ## Phase 4: Make the icon behave
 
-- [ ] **Switch the icon's behaviour per tab.** No popup on IMDb title tabs (click opens VidFast); popup on every other tab. Update it when tabs change or load.
+- [x] **Switch the icon's behaviour per tab.** No popup on IMDb title tabs (click opens VidFast); popup on every other tab. Update it when tabs change or load.
   *Done when:* clicking on IMDb opens VidFast, and clicking on any other site shows recents.
-- [ ] **List recents in the icon's right-click menu.** So history is reachable on IMDb, where the click is taken.
+- [x] **List recents in the icon's right-click menu.** So history is reachable on IMDb, where the click is taken.
   *Done when:* right-clicking the icon on IMDb shows your five titles and each one opens.
-- [ ] **Grey out the icon on pages VidFast can't play.** IMDb pages for people, video games, podcasts and lists.
+- [x] **Grey out the icon on pages VidFast can't play.** IMDb pages for people, video games, podcasts and lists.
   *Done when:* clicking on a person's page does nothing harmful.
 
 ## Phase 5: Edge cases and polish
@@ -78,7 +78,7 @@ The path (`movie` or `tv`) picks the player. For episodes, the ID must be the **
   *Done when:* a special opens the right video or fails with the `?` badge.
 - [ ] *(Optional)* **Episodes list page opens that season.** `/episodes/?season=3` opens S3 E1.
   *Done when:* it works for any season number.
-- [ ] **Add proper icons.** 16, 48 and 128 px, plus a greyed version.
+- [x] **Add proper icons.** 16, 48 and 128 px, plus a greyed version.
   *Done when:* it's recognisable in the toolbar.
 
 ## Later
