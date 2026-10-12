@@ -6,8 +6,10 @@
  * the first and carries it to the right; then the window steps forward and
  * slides back over the first, settling in front of it as the active tab, its
  * player covering the page. The new tab is the bright mark; once its window is
- * mostly out, the window's outline takes the bright stroke too. The slider is
- * how far the window travels before it comes round.
+ * mostly out, the window's outline takes the bright stroke too. The two
+ * windows part symmetrically, the first stepping left as the new one steps
+ * right, so the figure stays centred on its rest pose throughout. The slider
+ * is how far apart they travel before the new one comes round.
  *
  * The pattern: scrub (Exploded's), staged. One spring, read as three phases,
  * and a hit test on a fixed screen band, so the moving window never changes
@@ -36,9 +38,11 @@ function mount({ stage, svg, read }, value) {
   let travel = value;
 
   const C = Cam(45, 0.5, 1.5);
+  // Fitted to both windows at their widest parting, which is symmetric about the rest pose.
+  const HALF = MAX_TRAVEL / 2;
   fit(C, [
-    [0, -GAP - TK, 0], [W, GAP, 0], [0, GAP, H + TH], [W, 0, H + TH],
-    [MAX_TRAVEL + W, -GAP, 0], [MAX_TRAVEL + W, GAP, 0], [MAX_TRAVEL + W, GAP, H + TH],
+    [-HALF, -TK, 0], [-HALF, 0, H + TH], [W, GAP, 0], [0, GAP, H + TH],
+    [HALF + W, -GAP, 0], [HALF + W, GAP, 0], [HALF + W, GAP, H + TH], [HALF, -GAP, H + TH],
   ], 200, 166);
   const P = proj(C);
   /** A world point on a window's plane: u along it, v up it, at depth y. */
@@ -80,7 +84,10 @@ function mount({ stage, svg, read }, value) {
     if (p === drawn) return;
     drawn = p;
     const rise = part(p, 0, A1), fwd = part(p, A2, A3);
-    const du = (part(p, A1, A2) - part(p, A3, 1)) * travel, y = -GAP + fwd * 2 * GAP;
+    const apart = (part(p, A1, A2) - part(p, A3, 1)) * travel, du = apart / 2, y = -GAP + fwd * 2 * GAP;
+    // the first window steps left as far as the new one steps right; the projection is linear, so a shift is exact
+    const [ox, oy] = at(0, 0, 0), [fx, fy] = at(-apart / 2, 0, 0);
+    frontG.setAttribute("transform", apart ? `translate(${fx - ox} ${fy - oy})` : "");
     if ((y > 0) !== ahead) { ahead = y > 0; ahead ? g.appendChild(backG) : g.insertBefore(backG, frontG); }
     back.plate.setAttribute("d", shape(FACE, du, 0, y - TK));
     back.face.setAttribute("d", shape(FACE, du, 0, y));
@@ -104,9 +111,9 @@ function mount({ stage, svg, read }, value) {
   });
   bag.add(B.unregister);
 
-  // The band the pointer is read on: the first window's left edge to the far edge of a fully pulled-out window. Fixed.
-  const left = at(0, H / 2, 0)[0], right = at(MAX_TRAVEL + W, H / 2, -GAP)[0];
-  const top = at(0, H + TH, 0)[1] - 12, bottom = at(MAX_TRAVEL + W, 0, -GAP)[1] + 12;
+  // The band the pointer is read on: the widest parting's left edge to its right edge. Fixed.
+  const left = at(-HALF, H / 2, 0)[0], right = at(HALF + W, H / 2, -GAP)[0];
+  const top = at(-HALF, H + TH, 0)[1] - 12, bottom = at(HALF + W, 0, -GAP)[1] + 12;
   let over = null;
 
   function retarget() {
