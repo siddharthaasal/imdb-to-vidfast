@@ -4,6 +4,8 @@ A small Chrome extension: on any IMDb title page, click the toolbar icon and the
 
 ## Install
 
+![Installing VidFast launcher: unzip, open chrome://extensions, turn on Developer mode, Load unpacked, pin, then click it on an IMDb title](docs/install.gif)
+
 1. Download `vidfast-launcher-v1.0.0.zip` from the [latest release](https://github.com/siddharthaasal/imdb-to-vidfast/releases/latest) and unzip it somewhere permanent, for example `Documents/vidfast-launcher`.
 2. Open `chrome://extensions` and turn on **Developer mode** (top right).
 3. Click **Load unpacked** and select the unzipped `vidfast-launcher` folder.
@@ -55,5 +57,6 @@ Plain JavaScript with no build step: edit the files, then reload the extension o
 | `config.js` | The VidFast base URL, the only place it appears |
 | `popup.html`, `popup.css`, `popup.js` | The recent-titles popup |
 | `tools/make_icons.py` | Draws `icons/` (`python3 tools/make_icons.py`; edit colours and shapes at the top) |
+| `tools/make_install_gif.py` | Draws `docs/install.gif`, the illustrated install walkthrough (needs Pillow: `pip install pillow`) |
 
 `plan.md` is the build list and its progress.
